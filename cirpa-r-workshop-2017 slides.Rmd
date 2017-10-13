@@ -345,6 +345,12 @@ We have 8 columns and 122,240 rows of data. `read_csv()` brings the data in as a
 ## What does the data look like?
 
 ```{r,eval=FALSE}
+View(revenue_raw) # in RStudio
+```
+
+## What does the data look like?
+
+```{r,eval=FALSE}
 head(revenue_raw, 1) # show just the first row
 ```
 
@@ -366,7 +372,7 @@ head(revenue_raw, 1) # show just the first row
 
 * All can be used in conjunction with `group_by()`
 
-## What cleanup do we want to do?
+## Cleanup To Do
 
 * As it comes out of CANSIM, this data set contains a number of categories and columns we don't need today. 
 * The data is also in what's often called a "long" format, where the names of the variables are stored in one column (`REVENUE`) and the actual values are stored in another (`Value`). 
@@ -384,13 +390,16 @@ filter(revenue_raw,
 
 ## Comparison operators
 
-```
->
->=
-<
-<=
-!=
-==
+```{r, eval=FALSE}
+>   # greater than
+>=  # greater than or equal to
+<   # less than
+<=  # less than or equal to
+!=  # not equal
+==  # equal
+  
+%in% # not quite a comparison operator, but handy 
+     # x %in% y is true if the values of vector x are present in vector y
 ```
 
 ## Logical operators
@@ -424,7 +433,7 @@ revenue <- filter(revenue_raw,
                     FUND == 'Total funds (x 1,000)')
 ```
 
-Shortcut: Alt-Hyphen in RStudio
+Shortcut for assignment operator: Alt-Hyphen in RStudio
 
 ## Combining operations
 A new variable for each step gets cumbersome, so `dplyr` provides an operator, the pipe (`%>%`) that combines operations:
@@ -442,10 +451,10 @@ revenue <- revenue_raw %>%
 
 `x %>% f(y)` turns into `f(x, y)`, and `x %>% f(y) %>% g(z)` turns into `g(f(x, y), z)` etc.
 
-Shortcut: Ctrl-Shift-M in RStudio!
+Shortcut for pipe operator: Ctrl-Shift-M in RStudio
 
 ```{r}
-head(revenue, 1)
+head(revenue, 1) # looks good!
 ```
 
 ## Visualizing
@@ -456,6 +465,10 @@ revenue %>%
   ggplot(aes(Ref_Date, Value, group = GEO)) +
   geom_line()
 ```
+
+Not the prettiest, but it works! However, note that we're currently having to filter, rather than point to a column. The data is still in "long" format rather than "wide" format.
+
+Before we move to wide format, however, we'll want to do one additional step required by this dataset. As it comes out of CANSIM (or directly from CAUBO), it includes a bunch of subtotal and total rows. If we want to be able to reasonably break things down or add them up, we want to make sure we won't double count, so lets omit these.
 
 ## Just keep non-total rows
 
@@ -576,20 +589,20 @@ filter(test_data, is.na(x) | x > 1)
 
 ## Arranging rows
 ```{r}
-arrange(flights, year, month, day)
+# arrange(flights, year, month, day)
 ```
 
 ```{r}
-arrange(flights, desc(arr_delay))
+# arrange(flights, desc(arr_delay))
 ```
 
 ## Selecting columns
 ```{r}
-select(flights, year, month, day)
+# select(flights, year, month, day)
 ```
 
 ```{r}
-select(flights, year:day)
+# select(flights, year:day)
 ```
 
 ## Select helper functions
@@ -603,17 +616,17 @@ select(flights, year:day)
 
 ## Add new variables with mutate
 ```{r}
-flights_sml <- select(flights, 
-  year:day, 
-  ends_with("delay"), 
-  distance, 
-  air_time
-)
-
-mutate(flights_sml,
-  gain = arr_delay - dep_delay,
-  speed = distance / air_time * 60
-)
+# flights_sml <- select(flights, 
+#   year:day, 
+#   ends_with("delay"), 
+#   distance, 
+#   air_time
+# )
+# 
+# mutate(flights_sml,
+#   gain = arr_delay - dep_delay,
+#   speed = distance / air_time * 60
+# )
 ```
 
 ## Useful "mutations"
@@ -656,23 +669,23 @@ What happened?
 
 ## Summarising
 ```{r}
-summarise(flights, delay = mean(dep_delay, na.rm = TRUE))
+# summarise(flights, delay = mean(dep_delay, na.rm = TRUE))
 ```
 
 ## Summarising, with groups
 ```{r}
-by_day <- group_by(flights, year, month, day)
-summarise(by_day, delay = mean(dep_delay, na.rm = TRUE))
+# by_day <- group_by(flights, year, month, day)
+# summarise(by_day, delay = mean(dep_delay, na.rm = TRUE))
 ```
 
 ## Combining operations
 A new variable for each step gets cumbersome, so `dplyr` provides an operator, the pipe (`%>%`) that combines operations:
 
 ```{r}
-flights %>%
-  group_by(year, month, day) %>%
-  summarise(delay = mean(dep_delay, na.rm = TRUE)) %>%
-  head(5)
+# flights %>%
+#   group_by(year, month, day) %>%
+#   summarise(delay = mean(dep_delay, na.rm = TRUE)) %>%
+#   head(5)
 ```
 
 `x %>% f(y)` turns into `f(x, y)`, and `x %>% f(y) %>% g(z)` turns into `g(f(x, y), z)` etc.
@@ -701,15 +714,15 @@ mean(c(1,NA,3), na.rm = TRUE)
 
 ## Counts
 ```{r}
-flights %>%
-  group_by(month) %>%
-  summarise(n = n())
+# flights %>%
+#   group_by(month) %>%
+#   summarise(n = n())
 ```
 
 ## Counts, shorthand:
 ```{r}
-flights %>%
-  count(month)
+# flights %>%
+#   count(month)
 ```
 
 ## Useful summarising functions:
@@ -724,23 +737,23 @@ flights %>%
 ## Logical sums
 Number of flights before 5:00am:
 ```{r}
-flights %>% 
-  filter(!is.na(dep_delay), !is.na(arr_delay)) %>%
-  group_by(year, month, day) %>% 
-  summarise(n_early = sum(dep_time < 500))
+# flights %>% 
+#   filter(!is.na(dep_delay), !is.na(arr_delay)) %>%
+#   group_by(year, month, day) %>% 
+#   summarise(n_early = sum(dep_time < 500))
 ```
 
 ## Grouped mutates
 ```{r}
-flights %>%
-  filter(!is.na(arr_delay)) %>%
-  group_by(year, month) %>%
-  summarise(n_delayed = sum(arr_delay > 30)) %>%
-  group_by(year) %>%
-  mutate(
-    n_delayed_year = sum(n_delayed),
-    pct = (n_delayed / n_delayed_year) * 100
-    )
+# flights %>%
+#   filter(!is.na(arr_delay)) %>%
+#   group_by(year, month) %>%
+#   summarise(n_delayed = sum(arr_delay > 30)) %>%
+#   group_by(year) %>%
+#   mutate(
+#     n_delayed_year = sum(n_delayed),
+#     pct = (n_delayed / n_delayed_year) * 100
+#     )
 ```
 
 # Additional Resources
