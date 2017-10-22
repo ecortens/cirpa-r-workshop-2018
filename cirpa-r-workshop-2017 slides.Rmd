@@ -27,6 +27,53 @@ knitr::opts_chunk$set(echo = TRUE)
 * A great community
     * Help and support
     * Innovation and development
+* R is a stable, well-supported language
+    * Major corporate backing, e.g., Microsoft
+
+## Growing fast!
+
+```{r,eval=FALSE,echo=FALSE,message=FALSE}
+# devtools::install_github('metacran/cranlogs')
+# library(cranlogs)
+# cran_R_downloads <- cran_downloads('R', from = '2012-10-01', to = '2017-09-30')
+# write_rds(cran_R_downloads, 'cran_R_downloads.rds', compress = 'gz')
+cran_R_downloads <- read_rds('cran_R_downloads.rds')
+
+cran_R_downloads %>% 
+  group_by(lubridate::year(date), lubridate::month(date)) %>% 
+  summarise(date = first(date), count = sum(count)) %>% 
+  ggplot(aes(date, count)) +
+  geom_line() +
+  geom_smooth()
+
+# R downloads not a great indicator, dependent on when releases are, etc
+```
+
+
+```{r,echo=FALSE,message=FALSE}
+# crandl <- cran_downloads(from = '2012-10-01', to = '2017-09-30')
+# write_rds(crandl, 'crandl.rds', compress = 'gz')
+library(tidyverse)
+library(lubridate)
+
+crandl_monthly <- read_rds('crandl.rds') %>% 
+  group_by(year(date), month(date)) %>% 
+  summarise(date = first(date), count = sum(count))
+
+ggplot(crandl_monthly, aes(date, count/1e6)) +
+  geom_line() +
+  geom_smooth(method = 'loess') +
+  theme(axis.title.x = element_blank()) +
+  labs(
+    title = 'CRAN Package Downloads (Monthly)',
+    y = 'Package Downloads (Millions)')
+```
+
+## Growing fast!
+
+![](https://zgab33vy595fw5zq-zippykid.netdna-ssl.com/wp-content/uploads/2017/10/tag_growth_scatter-1-771x675.png)
+
+https://stackoverflow.blog/2017/10/10/impressive-growth-r/
     
 ## Some history
 * Based on the S programming language
@@ -39,6 +86,7 @@ knitr::opts_chunk$set(echo = TRUE)
 * RStudio
     * IDE, generally recognized as high quality, even outside R
     * Development began in 2008, first public release in February 2011
+        * Version 1.0 in Fall 2016
     * There have been other IDEs for R in the past, but since RStudio came on the scene, most are no longer seriously maintained
 
 ## Some history
@@ -93,7 +141,7 @@ One of the strengths of R: every step of this workflow can be done using it!
 * https://cran.r-project.org/
 * https://www.rstudio.com/products/rstudio/download3/#download
 
-* install.packages('tidyverse')
+* `install.packages('tidyverse')`
 
 ## Basic R
 * An interpreted language (like Python)
@@ -264,6 +312,7 @@ ggplot(mpg, aes(x=displ, y=hwy, color=drv)) +
 ```
 
 ## One last visualization
+A common scenario:
 ```{r}
 ggplot(data = diamonds) + 
   geom_bar(mapping = aes(x = cut, fill = clarity), position = "dodge")
@@ -312,18 +361,24 @@ seq(1, 10)
 
 ## Download the data
 
-We'll look at CANSIM Tables 0477-0058 and 0477-0059 which cover university revenues and expenditures, respectively:
+We'll look at CANSIM Tables 0477-0058 and 0477-0059 which cover university revenues and expenditures, respectively.
 
+<!---
 1. Search Google for: cansim 477-0058
 2. Follow the first result: "CANSIM - 477-0058 - Financial information of universities and degree ..."
 3. Click the "Download" tab
 4. At the bottom of the page, "Download entire table"
 5. Click "Download file from CANSIM (CSV Version, 714.2 kb)" and save where your RStudio project is
 6. Repeat steps 1 to 5 for cansim 477-0059.
+--->
+
+To save time, I've already downloaded the data from CANSIM. You can get it here:
+
+http://evancortens.com/cirpa/
 
 ## Load the data
 
-We'll use read_csv() from `readr`, which I prefer to the base R function, as it has some more sensible defaults, and it's faster.
+We'll use `read_csv()` from `readr`, which I prefer to the base R function, as it has some more sensible defaults, and it's faster.
 
 ```{r}
 # http://www20.statcan.gc.ca/tables-tableaux/cansim/csv/04770058-eng.zip
@@ -332,7 +387,7 @@ We'll use read_csv() from `readr`, which I prefer to the base R function, as it 
 revenue_raw <- read_csv('04770058-eng.zip') 
 ```
 
-The read_csv() function tells us that it guessed the types of the various columns. In this situation, the default guesses are fine, but of course we can force it to treat columns certain ways if we wish.
+The `read_csv()` function tells us that it guessed the types of the various columns. In this situation, the default guesses are fine, but of course we can force it to treat columns certain ways if we wish.
 
 ## What does the data look like?
 
@@ -340,13 +395,15 @@ The read_csv() function tells us that it guessed the types of the various column
 revenue_raw
 ```
 
-We have 8 columns and 122,240 rows of data. `read_csv()` brings the data in as a `tibble`, which is just an R "data frame", but with some handy defaults, some of which we're seeing here. For instance, it gives us the size of the data frame in rows and columns, the types of the columns (e.g., "<chr>" for character) and only prints the first 10 rows, instead of overwhelming us with all of the data.
+We have 8 columns and 122,240 rows of data. `read_csv()` brings the data in as a `tibble`, which is just an R "data frame", but with some handy defaults, some of which we're seeing here. For instance, it gives us the size of the data frame in rows and columns, the types of the columns (e.g., "&lt;chr&gt;" for character) and only prints the first 10 rows, instead of overwhelming us with all of the data.
 
 ## What does the data look like?
 
 ```{r,eval=FALSE}
 View(revenue_raw) # in RStudio
 ```
+
+Or click the icon in the `Environment` tab.
 
 ## What does the data look like?
 
@@ -363,6 +420,18 @@ head(revenue_raw, 1) # show just the first row
 >* *Coordinate*: ditto
 >* *Value*: the actual dollar value (x 1,000, per the FUND heading)
 
+## What makes data "tidy"?
+
+>1. Each variable must have its own column.
+>2. Each observation must have its own row.
+>3. Each value must have its own cell.
+
+(See Wickham, 2014 and *R for Data Science*, chapter 12)
+
+Is the CANSIM data tidy?
+
+* Nope! So let's tidy it.
+
 ## dplyr basics
 * Pick observations by their values (`filter()`).
 * Reorder the rows (`arrange()`).
@@ -372,11 +441,21 @@ head(revenue_raw, 1) # show just the first row
 
 * All can be used in conjunction with `group_by()`
 
+## dplyr cheat sheet
+
+![](https://www.rstudio.com/wp-content/uploads/2015/01/data-transformation-cheatsheet-800x618.png)
+
+https://www.rstudio.com/resources/cheatsheets/
+
+(or Help | Cheatsheets in RStudio!)
+
+<!---
 ## Cleanup To Do
 
 * As it comes out of CANSIM, this data set contains a number of categories and columns we don't need today. 
 * The data is also in what's often called a "long" format, where the names of the variables are stored in one column (`REVENUE`) and the actual values are stored in another (`Value`). 
 * For certain types of analysis, we'll want to move into a "wide" format, where each column represents a variable.
+--->
 
 ## `filter()` the rows we want
 
@@ -439,7 +518,7 @@ Shortcut for assignment operator: Alt-Hyphen in RStudio
 A new variable for each step gets cumbersome, so `dplyr` provides an operator, the pipe (`%>%`) that combines operations:
 
 ```{r}
-revenue <- revenue_raw %>% 
+revenue_long <- revenue_raw %>% 
   # only rows matching this
   filter(SCHOOL == 'Total universities and colleges' & 
                     FUND == 'Total funds (x 1,000)') %>% 
@@ -454,89 +533,206 @@ revenue <- revenue_raw %>%
 Shortcut for pipe operator: Ctrl-Shift-M in RStudio
 
 ```{r}
-head(revenue, 1) # looks good!
+head(revenue_long, 1) # looks good so far!
 ```
+
+## Select helper functions
+* There are a number of helper functions you can use within select():
+    * `starts_with("abc")`: matches names that begin with "abc".
+    * `ends_with("xyz")`: matches names that end with "xyz".
+    * `contains("ijk")`: matches names that contain "ijk".
+    * `matches("(.)\\1")`: selects variables that match a regular expression.
+    * `num_range("x", 1:3)`: matches x1, x2 and x3.
+    * `one_of(vector)`: columns whose names are in said vector.
+
+## Tidy data with `tidyr`
+
+The two main `tidyr` functions:
+
+* `gather(data, key, value)`: Moves column names into a `key` column, with the values going into a single `value` column.
+* `spread(data, key, value)`: Moves unique values of `key` column into column names, with values from the `value` column.
+
+## `tidyr` Cheatsheet
+
+![](tidyr.png)
+
+https://www.rstudio.com/resources/cheatsheets/ (Data Import Cheatsheet)
+
+## `spread()` CANSIM
+
+```{r}
+revenue <- revenue_long %>% 
+  spread(REVENUE, Value)
+
+revenue
+```
+
 
 ## Visualizing
 
 ```{r}
 revenue %>% 
-  filter(GEO == 'Canada' & REVENUE == 'Total revenues') %>% 
-  ggplot(aes(Ref_Date, Value, group = GEO)) +
+  filter(GEO == 'Canada') %>% 
+  # pass the result to ggplot() as the first argument
+  ggplot(aes(Ref_Date, `Total revenues`)) +
+  # now it switches to + to combine, which is ggplot's way
   geom_line()
 ```
 
-Not the prettiest, but it works! However, note that we're currently having to filter, rather than point to a column. The data is still in "long" format rather than "wide" format.
+Not the prettiest, but it works! 
 
-Before we move to wide format, however, we'll want to do one additional step required by this dataset. As it comes out of CANSIM (or directly from CAUBO), it includes a bunch of subtotal and total rows. If we want to be able to reasonably break things down or add them up, we want to make sure we won't double count, so lets omit these.
-
-## Just keep non-total rows
-
+## Visualizing: Labels
 ```{r}
-revenue_types <- c(
-  "Social Sciences and Humanities Research Council",
-  "Health Canada", 
-  "Natural Sciences and Engineering Research Council", 
-  "Canadian Institute of Health Research", 
-  "Canada Foundation for Innovation", 
-  "Canada Research Chairs", 
-  "Other federal", 
-  # "Federal", # subtotal of previous 7 lines
-  
-  "Provincial", 
-  "Municipal", 
-  "Other provinces", 
-  "Foreign", 
-  # "Non-federal", # subtotal of previous 4 lines
-  
-  "Credit courses tuiton", 
-  "Non-credit tution", 
-  "Other fees", 
-  # "Tuition and other fees", # subtotal of previous 3 lines
-  
-  "Donations made by individuals",
-  "Donations made by business enterprises",  
-  "Donations made by not-for-profit organizations",
-  # "Total donations", # subtotal of previous 3 lines
-  
-  "Grants made by Individuals", 
-  "Grants made by business enterprises", 
-  "Grants made by not-for-profit organizations", 
-  # "Total grants", # subtotal of previous 3 lines
-  
-  "Endowment", 
-  "Other investments",
-  # "Investments", # subtotal of previous 2 lines
- 
-  "Sale of service and products", 
-  "Miscellaneous"
-  # "Other revenue type", # subtotal of previous 2 lines
-
-  # "Total revenues" # total of all lines
-)
-
-revenue_cats <- revenue %>% 
-  filter(REVENUE %in% revenue_types)
-
+revenue %>% 
+  filter(GEO == 'Canada') %>% 
+  ggplot(aes(Ref_Date, `Total revenues`)) +
+  geom_line() +
+  labs(title = 'Total University and Degree-Granting College Revenue',
+       x = 'Fiscal Year',
+       y = 'Revenue ($ thousands)') +
+  scale_y_continuous(labels = scales::comma)
 ```
 
-```{r}
-z <- revenue_cats %>% 
-  semi_join(
-    revenue_cats %>% filter(GEO == 'Canada', Ref_Date == 2015) %>% arrange(-Value) %>% head(5),
-    by = 'REVENUE'
-  ) %>% 
-  filter(Ref_Date >= 2006 & GEO != 'Canada') %>% 
-  arrange(Ref_Date) %>% 
-  group_by(GEO, REVENUE) %>% 
-  mutate(pct_change = (Value - first(Value)) / first(Value))
-```
+## Inline Calculation
 
 ```{r}
-ggplot(z, aes(Ref_Date, pct_change, group = GEO)) +
-  facet_grid(GEO ~ REVENUE) +
+revenue %>% 
+  filter(GEO %in% c('Canada', 'Alberta', 'Ontario')) %>% 
+  ggplot(aes(Ref_Date, `Tuition and other fees` / `Total revenues`, color = GEO)) +
+  geom_line() +
+  labs(title = 'Tuition and fees as a share of total revenue') +
+  scale_y_continuous(labels = scales::percent)
+```
+
+## Exercises
+
+>1. Visualize another variable
+>2. Set some appropriate labels and scales
+>3. Graph a time subset (e.g., between 2005 and 2010)
+
+## Other `dplyr` "verbs"
+
+Which province took in the most tuition revenue in 2010?
+
+```{r}
+revenue %>%
+  filter(GEO != 'Canada', Ref_Date == 2010) %>% 
+  select(GEO, `Tuition and other fees`) %>% 
+  arrange(desc(`Tuition and other fees`))
+```
+
+## Create a new variable
+
+```{r}
+revenue %>% 
+  select(Ref_Date, GEO, `Tuition and other fees`, `Total revenues`) %>% 
+  mutate(tuition_share = `Tuition and other fees` / `Total revenues`)
+```
+
+Keeps the same number of rows
+
+## Useful "mutations"
+* Arithmetic: `+, -, *, /, ^`
+* Modular arithmetic: `%/%` (integer division), `%%` (remainder)
+* Logs: `log(), log2(), log10()`
+* Offsets: `lead()`, `lag()`
+* Cumulative and rolling aggregates: `cumsum()`, `cumprod()`, `cummin()`, `cummax()`, `cummean()`
+* Logical comparisons: `<, <=, >, >=, !=, ==`
+* Ranking: `min_rank()`, `row_number()`, `dense_rank()`, `percent_rank()`, `cume_dist()`, `ntile()`
+* `ifelse()`
+* `recode()`
+* `case_when()`
+
+## Summarize (aggregate)
+
+```{r}
+revenue %>% 
+  group_by(GEO) %>% 
+  summarise(avg_endowment_revenue = mean(Endowment)) %>% 
+  arrange(-avg_endowment_revenue)
+```
+
+## Useful summarising functions:
+* `mean(x)`, `median(x)`
+* `sd(x)`, `IQR(x)` (interquartile range), `mad(x)` (median absolute deviation)
+* `min(x)`, `max(x)`, `quantile(x, 0.25)`
+* `first(x)`, `nth(x, 2)`, `last(x)`
+* `n(x)`, `n_distinct(x)`
+* Counts and proportions of logical values: `sum(x > 10)`, `mean(y == 0)`
+    * `TRUE` is converted to `1` and `FALSE` to `0`
+
+## Exercise:
+
+Compute the total tuition revenue of the three western-most provinces in 2007.
+
+```{r}
+revenue %>% 
+  filter(GEO %in% c('British Columbia', 'Alberta', 'Saskatchewan'), Ref_Date == 2007) %>% 
+  summarise(sum(`Tuition and other fees`))
+```
+
+## Group by new variable
+
+These three provinces compared to all other provinces and national average.
+
+```{r}
+revenue %>% 
+  filter(Ref_Date == 2007) %>% 
+  mutate(category = case_when(
+    GEO %in% c('British Columbia', 'Alberta', 'Saskatchewan') ~ '3 Western Provinces',
+    GEO == 'Canada' ~ GEO,
+    TRUE ~ 'All Other Provinces'
+  )) %>% 
+  group_by(category) %>% 
+  summarise(sum(`Tuition and other fees`))
+```
+
+## Change relative first year
+
+```{r}
+tuition_relative_change <- revenue %>% 
+  arrange(Ref_Date, GEO) %>% 
+  group_by(GEO) %>%
+  mutate(rel_change = (`Tuition and other fees` - first(`Tuition and other fees`)) / first(`Tuition and other fees`)) %>% 
+  select(Ref_Date, GEO, `Tuition and other fees`, rel_change)
+
+ggplot(tuition_relative_change, aes(Ref_Date, rel_change, color = GEO)) +
   geom_line()
 ```
+
+## Logical sums
+
+Count years with positive endowment income by province
+
+```{r}
+revenue %>% 
+  group_by(GEO) %>% 
+  summarise(num_pos_endow = sum(Endowment > 0))
+```
+
+## Exercises
+
+* Compare the Maritimes to the rest of Canada on one or more variable
+* Between 2005 and 2007, which provinces received more than $100 M in Total grants?
+* Which provinces, other than Nova Scotia and Ontario, had more than $20 M in Endowmennt income in 2003?
+* Which province was in "third place" in total revenue in 2012?
+
+## `purrr` (quickly)
+
+```{r}
+revenue %>% 
+  filter(GEO != 'Canada') %>% 
+  group_by(Ref_Date) %>% 
+  summarise(revenue_quantiles = list(quantile(`Total revenues`, c(0.25, 0.5, 0.75)))) %>% 
+  mutate(
+    low_25 = map_dbl(revenue_quantiles, "25%"),
+    mid = map_dbl(revenue_quantiles, '50%'),
+    high_75 = map_dbl(revenue_quantiles, '75%')
+  )
+```
+
+
+# Vectors (and other types)
 
 ## Missing data
 ```{r}
@@ -575,71 +771,6 @@ filter(test_data, x > 1)
 filter(test_data, is.na(x) | x > 1)
 ```
 
-## Exercises
-
-* Find all flights that
-    * Had an arrival delay of two or more hours
-    * Flew to Houston (IAH or HOU)
-    * Were operated by United, American, or Delta
-    * Departed in summer (July, August, and September)
-    * Arrived more than two hours late, but didn’t leave late
-    * Were delayed by at least an hour, but made up over 30 minutes in flight
-    * Departed between midnight and 6am (inclusive)
-* How many flights have a missing `dep_time`? What other variables are missing? What might these rows represent?
-
-## Arranging rows
-```{r}
-# arrange(flights, year, month, day)
-```
-
-```{r}
-# arrange(flights, desc(arr_delay))
-```
-
-## Selecting columns
-```{r}
-# select(flights, year, month, day)
-```
-
-```{r}
-# select(flights, year:day)
-```
-
-## Select helper functions
-* There are a number of helper functions you can use within select():
-    * `starts_with("abc")`: matches names that begin with "abc".
-    * `ends_with("xyz")`: matches names that end with "xyz".
-    * `contains("ijk")`: matches names that contain "ijk".
-    * `matches("(.)\\1")`: selects variables that match a regular expression.
-    * `num_range("x", 1:3)`: matches x1, x2 and x3.
-    * `one_of(vector)`: columns whose names are in said vector.
-
-## Add new variables with mutate
-```{r}
-# flights_sml <- select(flights, 
-#   year:day, 
-#   ends_with("delay"), 
-#   distance, 
-#   air_time
-# )
-# 
-# mutate(flights_sml,
-#   gain = arr_delay - dep_delay,
-#   speed = distance / air_time * 60
-# )
-```
-
-## Useful "mutations"
-* Arithmetic: `+, -, *, /, ^`
-* Modular arithmetic: `%/%` (integer division), `%%` (remainder)
-* Logs: `log(), log2(), log10()`
-* Offsets: `lead()`, `lag()`
-* Cumulative and rolling aggregates: `cumsum()`, `cumprod()`, `cummin()`, `cummax()`, `cummean()`
-* Logical comparisons: `<, <=, >, >=, !=, ==`
-* Ranking: `min_rank()`, `row_number()`, `dense_rank()`, `percent_rank()`, `cume_dist()`, `ntile()`
-* `ifelse()`
-* `decode()`
-
 ## Dealing with vectors...
 ```{r}
 c(1, 2, 3)
@@ -667,32 +798,7 @@ What about...
 
 What happened?
 
-## Summarising
-```{r}
-# summarise(flights, delay = mean(dep_delay, na.rm = TRUE))
-```
-
-## Summarising, with groups
-```{r}
-# by_day <- group_by(flights, year, month, day)
-# summarise(by_day, delay = mean(dep_delay, na.rm = TRUE))
-```
-
-## Combining operations
-A new variable for each step gets cumbersome, so `dplyr` provides an operator, the pipe (`%>%`) that combines operations:
-
-```{r}
-# flights %>%
-#   group_by(year, month, day) %>%
-#   summarise(delay = mean(dep_delay, na.rm = TRUE)) %>%
-#   head(5)
-```
-
-`x %>% f(y)` turns into `f(x, y)`, and `x %>% f(y) %>% g(z)` turns into `g(f(x, y), z)` etc.
-
 ## Missing values
-Let's come back to that `na.rm` from above:
-
 ```{r}
 mean(c(1,2,3))
 ```
@@ -712,48 +818,71 @@ mean(c(1,NA,3))
 mean(c(1,NA,3), na.rm = TRUE)
 ```
 
-## Counts
+## Vectors
+
+![](http://r4ds.had.co.nz/diagrams/data-structures-overview.png)
+
+## Vectors
+* Coercion (explicit and implicit)
+    * Type hierarchy
+* Atomic vectors (homogenous) vs lists (can nest/heterogeneous)
+* Names
+* Subsetting
+
+## Vectors: Naming
+
 ```{r}
-# flights %>%
-#   group_by(month) %>%
-#   summarise(n = n())
+c(x = 1, y = 2, z = 4)
+
+set_names(1:3, c("a", "b", "c"))
 ```
 
-## Counts, shorthand:
+## Vectors: Subsetting
 ```{r}
-# flights %>%
-#   count(month)
+# positive values
+x <- c("one", "two", "three", "four", "five")
+x[c(3, 2, 5)]
+
+# negative values
+x[c(-1, -3, -5)]
+#> [1] "two"  "four"
+
+# subset a named vector w/character vector
+x <- c(abc = 1, def = 2, xyz = 5)
+x[c("xyz", "def")]
 ```
 
-## Useful summarising functions:
-* `mean(x)`, `median(x)`
-* `sd(x)`, `IQR(x)` (interquartile range), `mad(x)` (median absolute deviation)
-* `min(x)`, `max(x)`, `quantile(x, 0.25)`
-* `first(x)`, `nth(x, 2)`, `last(x)`
-* `n(x)`, `n_distinct(x)`
-* Counts and proportions of logical values: `sum(x > 10)`, `mean(y == 0)`
-    * `TRUE` is converted to `1` and `FALSE` to `0`
-
-## Logical sums
-Number of flights before 5:00am:
+## Vectors: Logical subsetting
 ```{r}
-# flights %>% 
-#   filter(!is.na(dep_delay), !is.na(arr_delay)) %>%
-#   group_by(year, month, day) %>% 
-#   summarise(n_early = sum(dep_time < 500))
+x <- c(10, 3, NA, 5, 8, 1, NA)
+
+# All non-missing values of x
+x[!is.na(x)]
+#> [1] 10  3  5  8  1
+
+# All even (or missing!) values of x
+x[x %% 2 == 0]
+#> [1] 10 NA  8 NA
 ```
 
-## Grouped mutates
+## Lists
+
 ```{r}
-# flights %>%
-#   filter(!is.na(arr_delay)) %>%
-#   group_by(year, month) %>%
-#   summarise(n_delayed = sum(arr_delay > 30)) %>%
-#   group_by(year) %>%
-#   mutate(
-#     n_delayed_year = sum(n_delayed),
-#     pct = (n_delayed / n_delayed_year) * 100
-#     )
+x <- list(1, 2, 3)
+x
+str(x) # str...ucture
+```
+
+Can contain different types of objects:
+```{r}
+y <- list("a", 1L, 1.5, TRUE)
+str(y)
+```
+
+Or other lists:
+```{r}
+z <- list(list(1, 2), list(3, 4))
+str(z)
 ```
 
 # Additional Resources

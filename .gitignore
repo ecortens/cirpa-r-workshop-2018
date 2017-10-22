@@ -2,3 +2,5 @@
 .Rhistory
 .RData
 .Ruserdata
+crandl.rds
+cran_R_downloads.rds
