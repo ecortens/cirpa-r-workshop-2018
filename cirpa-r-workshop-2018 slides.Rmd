@@ -356,12 +356,14 @@ seq(1, 10)
 1. File | New Project...
 2. New Directory
 3. Empty Project
-4. Under "Directory name:" put in "CIRPA 2017", under "Create project as a subdirectory of:", pick somewhere you'll remember.
+4. Under "Directory name:" put in "CIRPA 2018", under "Create project as a subdirectory of:", pick somewhere you'll remember.
 5. Click "Create Project", and RStudio will refresh, with your new project loaded.
 
 ## Download the data
 
 We'll look at CANSIM Tables 0477-0058 and 0477-0059 which cover university revenues and expenditures, respectively.
+
+TODO: Should we change the examples from CANSIM to a built in dataset?
 
 <!---
 1. Search Google for: cansim 477-0058
@@ -719,6 +721,8 @@ revenue %>%
 
 ## `purrr` (quickly)
 
+TODO: I think we remove the `purrr` section - as per discussion.
+
 ```{r}
 revenue %>% 
   filter(GEO != 'Canada') %>% 
@@ -884,6 +888,13 @@ Or other lists:
 z <- list(list(1, 2), list(3, 4))
 str(z)
 ```
+
+TODO: Add more content here.
+
+* The R formula language -- using concepts from how the Tidyverse handles fields.
+  * `data = .`
+* statistical testings `t.test` - use the formula language -- come up with examples.
+* modeling using `lm` - also use the formula language
 
 # Additional Resources
 
