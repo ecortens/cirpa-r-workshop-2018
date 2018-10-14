@@ -892,6 +892,267 @@ z <- list(list(1, 2), list(3, 4))
 str(z)
 ```
 
+# Modeling
+
+When we have the data the way we want it, we want to ask questions about it.
+To determine the relationship between parts of the data.
+
+This can range from exploratory modeling (to better understand the data) to
+more formally trying to establish relationships between variables.
+The process is the same for both, but the mindset is different.
+
+* define a family of models - expressed as an equation - you are trying to estimate the **parameters** of the question
+* generate a fitted model that fills in the parameters
+
+You are trying to get the model from the family that best fits the data.
+That doesn't mean it's a "good" or "true" model.
+
+## Simulated Data
+
+```{r}
+sim1$x
+```
+
+```{r}
+library(modelr)
+ggplot(sim1, aes(x, y)) +
+  geom_point()
+```
+
+* we can see that there is a pattern from the scatter plot
+* the pattern looks like a straight line - `geom_abline` plots straight line on the graph
+
+```{r}
+ggplot(sim1, aes(x, y)) +
+  geom_point() +
+  geom_abline(aes(intercept = 12, slope = 0.5))
+```
+
+That's just one model - how can we tell if it's good or not?
+We look at the difference between the predictions and the
+actual data.
+
+```{r, echo = FALSE}
+dist1 <- sim1 %>% 
+  mutate(
+    dodge = rep(c(-1, 0, 1) / 20, 10),
+    x1 = x + dodge,
+    pred = 12 + x1 * 0.5
+  )
+
+ggplot(dist1, aes(x1, y)) + 
+  geom_abline(intercept = 12, slope = 0.5, colour = "grey40") +
+  geom_point(colour = "grey40") +
+  geom_linerange(aes(ymin = y, ymax = pred), colour = "#3366FF") 
+```
+
+We can find this for any model by creating an R function.
+We take the intercept and add the slope multiplied by `x`.
+```{r}
+model1 <- function(data, a) {
+  a[1] + data$x * a[2]
+}
+
+model1(sim1, c(12, 0.5))
+```
+
+Once we have the model's prediction, we can look at the difference between those and what the actual data is.
+
+```{r}
+measure_distance <- function(data, mod) {
+  diff <- data$y - model1(data, mod)
+  diff
+}
+measure_distance(sim1, c(12, 0.5))
+```
+
+We want to both put all distances as positive numbers and more heavily penalize predictions that are far from the actual values - so we square the diffference.
+
+```{r}
+measure_distance <- function(data, mod) {
+  diff <- data$y - model1(data, mod)
+  diff ^ 2
+}
+measure_distance(sim1, c(12, 0.5))
+```
+
+We want to summarize it - so we take the mean across all the predictions and take the square root to put the differences back in terms of the original units.
+
+```{r}
+measure_distance <- function(data, mod) {
+  diff <- data$y - model1(data, mod)
+  sqrt(mean(diff ^ 2))
+}
+measure_distance(sim1, c(12, 0.5))
+```
+
+So, to choose between models -- we can just put in different values.
+```{r}
+measure_distance(sim1, c(7, 1.5))
+```
+
+So, we can generate a lot of models and pick the one with the lowest error.
+
+```{r}
+models <- tibble(
+  a1 = runif(250, -20, 40),
+  a2 = runif(250, -5, 5)
+)
+
+ggplot(sim1, aes(x, y)) +
+  geom_abline(aes(intercept = a1, slope = a2), data = models, alpha = 1/4) +
+  geom_point()
+```
+
+```{r}
+sim1_dist <- function(a1, a2) {
+  measure_distance(sim1, c(a1, a2))
+}
+
+models %>%
+  mutate(dist = purrr::map2_dbl(a1, a2, sim1_dist)) -> models
+models
+```
+
+Get the 10 best models
+```{r}
+models %>%
+  filter(rank(dist) <= 10) %>%
+  arrange(dist)
+```
+
+Plot those models on the data.
+Lighter colored models are closer.
+```{r}
+ggplot(sim1, aes(x, y)) +
+  geom_point(size = 2, color = "grey30") +
+  geom_abline(
+    aes(intercept = a1, slope = a2, color = -dist),
+    data = filter(models, rank(dist) <= 10)
+  )
+```
+
+Now, we switch to parameter space...
+We plot every candidate model - showing the distance in color.
+We highlight our 10 best models in red.
+
+```{r}
+ggplot(models, aes(a1, a2)) +
+  geom_point(data = filter(models, rank(dist) <= 10), size = 4, colour = "red") + 
+  geom_point(aes(colour = -dist))
+```
+
+So, you can zoom in on the area where the best models tend to be. Note the axes and the legend.
+
+```{r}
+grid <- expand.grid(
+  a1 = seq(-5, 20, length = 25),
+  a2 = seq(1, 3, length = 25)
+  ) %>%
+  mutate(dist = purrr::map2_dbl(a1, a2, sim1_dist))
+```
+
+What do we get as the new best 10 models?
+
+```{r}
+grid %>%
+  filter(rank(dist) <= 10) %>%
+  arrange(dist)
+```
+
+
+```{r}
+grid %>%
+  ggplot(aes(a1, a2)) +
+  geom_point(data = filter(grid, rank(dist) <= 10), size = 4, colour = "red") +
+  geom_point(aes(colour = -dist))
+```
+
+```{r}
+grid %>%
+  ggplot(aes(a1, a2, z=-dist)) +
+  geom_contour()
+```
+```{r}
+grid %>%
+  ggplot(aes(a1, a2)) +
+  geom_point(data = filter(grid, rank(dist) <= 10), size = 4, colour = "red") +
+  geom_point(aes(colour = -dist)) + 
+  geom_contour(aes(z = -dist), colour = "green")
+```
+Overlay those 10 best models on the data.
+
+```{r}
+ggplot(sim1, aes(x, y)) +
+  geom_point(size = 2, colour = "grey30") +
+  geom_abline(
+    aes(intercept = a1, slope = a2, colour = -dist),
+    data = filter(grid, rank(dist) <= 10)
+  )
+```
+
+There is a tool to optimize the parameters so you get the smallest distance.
+
+```{r}
+best <- optim(c(0, 0), measure_distance, data = sim1)
+best$par
+```
+
+```{r}
+ggplot(sim1, aes(x, y)) +
+  geom_point(size = 2, colour = "grey30") +
+  geom_abline(intercept = best$par[1], slope = best$par[2])
+```
+
+Of course, R has a tool to do this whole process automatically.
+This is our standard OLS regression.
+
+```{r}
+sim1_mod <- lm(y ~ x, data = sim1)
+coef(sim1_mod)
+```
+
+We can use a model object like `sim1_mod` to generate predictions.
+We an start with an empty grid.
+
+```{r}
+grid <- sim1 %>%
+  data_grid(x)
+grid
+```
+
+```{r}
+grid <- grid %>%
+  add_predictions(sim1_mod)
+grid
+```
+
+Plot those predictions using `geom_line`.
+
+```{r}
+ggplot(sim1, aes(x)) +
+  geom_point(aes(y = y)) +
+  geom_line(aes(y = pred), data = grid, colour = "red", size = 1)
+```
+
+Add residuals. We need to use the original dataset.
+
+```{r}
+sim1 <- sim1 %>%
+  add_residuals(sim1_mod)
+sim1
+```
+
+```{r}
+ggplot(sim1, aes(resid)) +
+  geom_freqpoly(binwidth = 0.5)
+```
+```{r}
+ggplot(sim1, aes(x, resid)) +
+  geom_ref_line(h = 0) +
+  geom_point()
+```
+
 TODO: Add more content here.
 
 * The R formula language -- using concepts from how the Tidyverse handles fields.
