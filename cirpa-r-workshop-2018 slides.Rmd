@@ -248,6 +248,9 @@ ggplot(data = mpg) +
   facet_wrap(~ class, nrow = 2)
 ```
 
+**TODO: This might be a good point to talk about formulas - since we use the
+formula notation with facets.
+
 ## Facets: Two Variables
 ```{r}
 ggplot(data = mpg) + 
@@ -893,6 +896,10 @@ TODO: Add more content here.
 
 * The R formula language -- using concepts from how the Tidyverse handles fields.
   * `data = .`
+  * describe how to go from equations to R formulas - the `~` is the `=` we would write in an equation.
+	`y ~ x` translates to `y = a_1 + a_2 * x`
+  * `model_matrix` function 
+  * categorical variables -- does that mean we have to deal with factors?
 * statistical testings `t.test` - use the formula language -- come up with examples.
 * modeling using `lm` - also use the formula language
 
