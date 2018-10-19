@@ -1,7 +1,7 @@
 ---
-title: "Data Carpentry: Using R to Analyze and Visualize Data (Part 1)"
-author: "Evan Cortens, PhD"
-date: "October 22, 2017"
+title: "Data Carpentry: Using R to Analyze and Visualize Data"
+author: "Evan Cortens, PhD and Stephen Childs"
+date: "October 21, 2018"
 output: 
   revealjs::revealjs_presentation:
     incremental: true
@@ -1200,6 +1200,7 @@ Additional:
 >* http://adv-r.had.co.nz/
 >* http://r-pkgs.had.co.nz/
 >* http://swcarpentry.github.io/r-novice-inflammation/
+>* https://rstudio-education.github.io/hopr/preface.html
 
 For help/community:
 
