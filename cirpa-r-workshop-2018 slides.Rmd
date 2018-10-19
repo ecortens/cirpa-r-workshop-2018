@@ -1175,6 +1175,21 @@ ggplot(sim1, aes(x, resid)) +
   geom_point()
 ```
 
+# Capstone Exercise
+
+The DC BikeShare Dataset has the number of bike share rides on each particularly day or time.
+There are two datasets: one with the total number of rides per day and one with the number
+of rides per hour.
+
+Also included with the data is the weather.
+
+Things to try:
+
+1. Find some outliers and why they happened (try googling specific dates).
+2. Estimate the effect that the seasons have on bike share usage? Day of the week?
+3. Build a model that predicts bike share usage for a given day. Separate your data into three
+parts.
+
 TODO: Add more content here.
 
 * The R formula language -- using concepts from how the Tidyverse handles fields.
