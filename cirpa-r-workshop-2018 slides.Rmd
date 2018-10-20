@@ -908,6 +908,8 @@ The process is the same for both, but the mindset is different.
 * define a family of models - expressed as an equation - you are trying to estimate the **parameters** of the question
 * generate a fitted model that fills in the parameters
 
+### The goal
+
 You are trying to get the model from the family that best fits the data.
 That doesn't mean it's a "good" or "true" model.
 
@@ -927,12 +929,27 @@ ggplot(sim1, aes(x, y)) +
   geom_point()
 ```
 
+## Plotting `sim1`
+
+```{r, echo=FALSE}
+ggplot(sim1, aes(x, y)) +
+  geom_point()
+```
+
 * we can see that there is a pattern from the scatter plot
 * the pattern looks like a straight line - `geom_abline` plots straight line on the graph
 
 ## Using `geom_abline`
 
 ```{r}
+ggplot(sim1, aes(x, y)) +
+  geom_point() +
+  geom_abline(aes(intercept = 12, slope = 0.5))
+```
+
+## Using `geom_abline`
+
+```{r, echo=FALSE}
 ggplot(sim1, aes(x, y)) +
   geom_point() +
   geom_abline(aes(intercept = 12, slope = 0.5))
