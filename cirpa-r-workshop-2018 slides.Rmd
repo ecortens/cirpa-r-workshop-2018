@@ -1148,6 +1148,9 @@ grid %>%
   ggplot(aes(a1, a2, z=-dist)) +
   geom_contour()
 ```
+
+## Contour Map (2)
+
 ```{r}
 grid %>%
   ggplot(aes(a1, a2)) +
@@ -1186,6 +1189,8 @@ best <- optim(c(0, 0), measure_distance, data = sim1)
 best$par
 ```
 
+## Plot the optimal model
+
 ```{r}
 ggplot(sim1, aes(x, y)) +
   geom_point(size = 2, colour = "grey30") +
@@ -1213,6 +1218,8 @@ grid <- sim1 %>%
 grid
 ```
 
+## Generate Predictions (2)
+
 ```{r}
 grid <- grid %>%
   add_predictions(sim1_mod)
@@ -1237,14 +1244,47 @@ sim1 <- sim1 %>%
 sim1
 ```
 
+## Plot Residuals
+
 ```{r}
 ggplot(sim1, aes(resid)) +
   geom_freqpoly(binwidth = 0.5)
 ```
+
+## Plot Residuals
+
 ```{r}
 ggplot(sim1, aes(x, resid)) +
   geom_ref_line(h = 0) +
   geom_point()
+```
+
+## _t_-tests
+
+```{r}
+t.test(disp ~ vs, data = mtcars)
+```
+
+## Correlation
+
+```{r}
+cor.test(mtcars$disp, mtcars$vs)
+```
+
+## Chi Squared (1)
+
+Smoking and Exercise
+
+```{r}
+library(MASS)
+tbl <- table(survey$Smoke, survey$Exer)
+tbl
+```
+
+## Chi Squared (2)
+
+```{r}
+chisq.test(tbl)
 ```
 
 # Capstone Exercise
