@@ -51,8 +51,10 @@ cran_R_downloads %>%
 
 
 ```{r,echo=FALSE,message=FALSE}
-# crandl <- cran_downloads(from = '2012-10-01', to = '2017-09-30')
-# write_rds(crandl, 'crandl.rds', compress = 'gz')
+library(cranlogs)
+library(readr)
+crandl <- cran_downloads(from = '2012-10-01', to = '2017-09-30')
+write_rds(crandl, 'crandl.rds', compress = 'gz')
 library(tidyverse)
 library(lubridate)
 
@@ -901,6 +903,8 @@ This can range from exploratory modeling (to better understand the data) to
 more formally trying to establish relationships between variables.
 The process is the same for both, but the mindset is different.
 
+## Types of Modeling
+
 * define a family of models - expressed as an equation - you are trying to estimate the **parameters** of the question
 * generate a fitted model that fills in the parameters
 
@@ -909,18 +913,24 @@ That doesn't mean it's a "good" or "true" model.
 
 ## Simulated Data
 
-```{r}
-sim1$x
-```
+The `modelr` package has a simulated dataset called `sim1`.
 
 ```{r}
 library(modelr)
+sim1$x
+```
+
+## Plotting `sim1`
+
+```{r}
 ggplot(sim1, aes(x, y)) +
   geom_point()
 ```
 
 * we can see that there is a pattern from the scatter plot
 * the pattern looks like a straight line - `geom_abline` plots straight line on the graph
+
+## Using `geom_abline`
 
 ```{r}
 ggplot(sim1, aes(x, y)) +
@@ -929,6 +939,9 @@ ggplot(sim1, aes(x, y)) +
 ```
 
 That's just one model - how can we tell if it's good or not?
+
+## Evaluating Predictive Models
+
 We look at the difference between the predictions and the
 actual data.
 
@@ -945,6 +958,7 @@ ggplot(dist1, aes(x1, y)) +
   geom_point(colour = "grey40") +
   geom_linerange(aes(ymin = y, ymax = pred), colour = "#3366FF") 
 ```
+## Defining a model as an R function
 
 We can find this for any model by creating an R function.
 We take the intercept and add the slope multiplied by `x`.
@@ -956,6 +970,8 @@ model1 <- function(data, a) {
 model1(sim1, c(12, 0.5))
 ```
 
+## Difference between predicted and actual
+
 Once we have the model's prediction, we can look at the difference between those and what the actual data is.
 
 ```{r}
@@ -965,6 +981,8 @@ measure_distance <- function(data, mod) {
 }
 measure_distance(sim1, c(12, 0.5))
 ```
+
+## Using squared distances
 
 We want to both put all distances as positive numbers and more heavily penalize predictions that are far from the actual values - so we square the diffference.
 
@@ -976,6 +994,8 @@ measure_distance <- function(data, mod) {
 measure_distance(sim1, c(12, 0.5))
 ```
 
+## Summary Measure of Distance
+
 We want to summarize it - so we take the mean across all the predictions and take the square root to put the differences back in terms of the original units.
 
 ```{r}
@@ -986,10 +1006,14 @@ measure_distance <- function(data, mod) {
 measure_distance(sim1, c(12, 0.5))
 ```
 
+## Use this message to choose a model
+
 So, to choose between models -- we can just put in different values.
 ```{r}
 measure_distance(sim1, c(7, 1.5))
 ```
+
+## Random Models Compared
 
 So, we can generate a lot of models and pick the one with the lowest error.
 
@@ -1004,6 +1028,8 @@ ggplot(sim1, aes(x, y)) +
   geom_point()
 ```
 
+## Difference for each random model
+
 ```{r}
 sim1_dist <- function(a1, a2) {
   measure_distance(sim1, c(a1, a2))
@@ -1014,12 +1040,15 @@ models %>%
 models
 ```
 
-Get the 10 best models
+## The 10 Best Models
+
 ```{r}
 models %>%
   filter(rank(dist) <= 10) %>%
   arrange(dist)
 ```
+
+## Plot all the random models.
 
 Plot those models on the data.
 Lighter colored models are closer.
@@ -1032,6 +1061,8 @@ ggplot(sim1, aes(x, y)) +
   )
 ```
 
+## Parameter Space
+
 Now, we switch to parameter space...
 We plot every candidate model - showing the distance in color.
 We highlight our 10 best models in red.
@@ -1041,6 +1072,8 @@ ggplot(models, aes(a1, a2)) +
   geom_point(data = filter(models, rank(dist) <= 10), size = 4, colour = "red") + 
   geom_point(aes(colour = -dist))
 ```
+
+## Zoom In
 
 So, you can zoom in on the area where the best models tend to be. Note the axes and the legend.
 
@@ -1060,6 +1093,8 @@ fine_grid <- expand.grid(
   mutate(dist = purrr::map2_dbl(a1, a2, sim1_dist))
 ```
 
+## The new best 10 models
+
 What do we get as the new best 10 models?
 
 ```{r}
@@ -1074,6 +1109,7 @@ fine_grid %>%
   arrange(dist)
 ```
 
+## Plot the new best 10 models
 
 ```{r}
 grid %>%
@@ -1081,6 +1117,8 @@ grid %>%
   geom_point(data = filter(grid, rank(dist) <= 10), size = 4, colour = "red") +
   geom_point(aes(colour = -dist))
 ```
+
+## Contour Map
 
 ```{r}
 grid %>%
@@ -1095,6 +1133,8 @@ grid %>%
   geom_contour(aes(z = -dist), colour = "green")
 ```
 
+## A finer contour map
+
 ```{r}
 fine_grid %>%
   ggplot(aes(a1, a2)) +
@@ -1102,7 +1142,8 @@ fine_grid %>%
   geom_point(aes(colour = -dist)) + 
   geom_contour(aes(z = -dist), colour = "orange", bins = 15, size = 1.5)
 ```
-Overlay those 10 best models on the data.
+
+## Overlay those 10 best models on the data.
 
 ```{r}
 ggplot(sim1, aes(x, y)) +
@@ -1112,6 +1153,8 @@ ggplot(sim1, aes(x, y)) +
     data = filter(grid, rank(dist) <= 10)
   )
 ```
+
+## Optimize the models
 
 There is a tool to optimize the parameters so you get the smallest distance.
 
@@ -1126,6 +1169,8 @@ ggplot(sim1, aes(x, y)) +
   geom_abline(intercept = best$par[1], slope = best$par[2])
 ```
 
+## R can do all of this in 1 command
+
 Of course, R has a tool to do this whole process automatically.
 This is our standard OLS regression.
 
@@ -1133,6 +1178,8 @@ This is our standard OLS regression.
 sim1_mod <- lm(y ~ x, data = sim1)
 coef(sim1_mod)
 ```
+
+## Generate Predictions
 
 We can use a model object like `sim1_mod` to generate predictions.
 We an start with an empty grid.
@@ -1149,13 +1196,15 @@ grid <- grid %>%
 grid
 ```
 
-Plot those predictions using `geom_line`.
+## Plot those predictions using `geom_line`.
 
 ```{r}
 ggplot(sim1, aes(x)) +
   geom_point(aes(y = y)) +
   geom_line(aes(y = pred), data = grid, colour = "red", size = 1)
 ```
+
+## Add residuals
 
 Add residuals. We need to use the original dataset.
 
@@ -1183,12 +1232,16 @@ of rides per hour.
 
 Also included with the data is the weather.
 
+## Thy these
+
 Things to try:
 
 1. Find some outliers and why they happened (try googling specific dates).
 2. Estimate the effect that the seasons have on bike share usage? Day of the week?
 3. Build a model that predicts bike share usage for a given day. Separate your data into three
 parts.
+
+## Notes
 
 TODO: Add more content here.
 
