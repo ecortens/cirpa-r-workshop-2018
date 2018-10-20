@@ -975,6 +975,7 @@ ggplot(dist1, aes(x1, y)) +
   geom_point(colour = "grey40") +
   geom_linerange(aes(ymin = y, ymax = pred), colour = "#3366FF") 
 ```
+
 ## Defining a model as an R function
 
 We can find this for any model by creating an R function.
@@ -1040,14 +1041,6 @@ models <- tibble(
   a2 = runif(250, -5, 5)
 )
 
-ggplot(sim1, aes(x, y)) +
-  geom_abline(aes(intercept = a1, slope = a2), data = models, alpha = 1/4) +
-  geom_point()
-```
-
-## Difference for each random model
-
-```{r}
 sim1_dist <- function(a1, a2) {
   measure_distance(sim1, c(a1, a2))
 }
@@ -1055,6 +1048,14 @@ sim1_dist <- function(a1, a2) {
 models %>%
   mutate(dist = purrr::map2_dbl(a1, a2, sim1_dist)) -> models
 models
+```
+
+## Plot the Random Models
+
+```{r}
+ggplot(sim1, aes(x, y)) +
+  geom_abline(aes(intercept = a1, slope = a2), data = models, alpha = 1/4) +
+  geom_point()
 ```
 
 ## The 10 Best Models
