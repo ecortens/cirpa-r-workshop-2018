@@ -16,6 +16,13 @@ output:
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
+# Introductions
+
+* Who are you/where do you work?
+* What software/tools do you spend most time with? (Excel? SPSS? Tableau? etc)
+* Do you have any programming experience? (Python? C? Javascript?)
+* What do you hope to get out of this workshop? How do you see yourself using R in an IR environment?s
+
 # Why use R?
 
 ## Why use R?
@@ -34,9 +41,8 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ```{r,eval=FALSE,echo=FALSE,message=FALSE}
 # devtools::install_github('metacran/cranlogs')
-# library(cranlogs)
-# cran_R_downloads <- cran_downloads('R', from = '2012-10-01', to = '2017-09-30')
-# write_rds(cran_R_downloads, 'cran_R_downloads.rds', compress = 'gz')
+# cran_R_downloads <- cranlogs::cran_downloads('R', from = '2012-10-01', to = '2018-09-30')
+# readr::write_rds(cran_R_downloads, 'cran_R_downloads.rds', compress = 'gz')
 cran_R_downloads <- read_rds('cran_R_downloads.rds')
 
 cran_R_downloads %>% 
@@ -51,7 +57,7 @@ cran_R_downloads %>%
 
 
 ```{r,echo=FALSE,message=FALSE}
-# crandl <- cran_downloads(from = '2012-10-01', to = '2017-09-30')
+# crandl <- cran_downloads(from = '2012-10-01', to = '2018-09-30')
 # write_rds(crandl, 'crandl.rds', compress = 'gz')
 library(tidyverse)
 library(lubridate)
@@ -880,13 +886,13 @@ x
 str(x) # str...ucture
 ```
 
-Can contain different types of objects:
+## Lists: Can contain different types of objects:
 ```{r}
 y <- list("a", 1L, 1.5, TRUE)
 str(y)
 ```
 
-Or other lists:
+## Lists: Or other lists:
 ```{r}
 z <- list(list(1, 2), list(3, 4))
 str(z)
