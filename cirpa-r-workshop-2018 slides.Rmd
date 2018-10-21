@@ -255,9 +255,6 @@ ggplot(data = mpg) +
   facet_wrap(~ class, nrow = 2)
 ```
 
-**TODO: This might be a good point to talk about formulas - since we use the
-formula notation with facets.
-
 ## Facets: Two Variables
 ```{r}
 ggplot(data = mpg) + 
@@ -290,7 +287,8 @@ ggplot(data = mpg) +
 ```{r}
 ggplot(data = mpg) + 
   geom_point(mapping = aes(x = displ, y = hwy, color = drv)) +
-  geom_smooth(mapping = aes(x = displ, y = hwy, color = drv, linetype = drv))
+  geom_smooth(mapping = aes(x = displ, y = hwy, color = drv,
+                            linetype = drv))
 ```
 
 ## Reducing Duplication
@@ -372,8 +370,6 @@ seq(1, 10)
 ## Download the data
 
 We'll look at CANSIM Tables 0477-0058 and 0477-0059 which cover university revenues and expenditures, respectively.
-
-TODO: Should we change the examples from CANSIM to a built in dataset?
 
 <!---
 1. Search Google for: cansim 477-0058
@@ -731,8 +727,6 @@ revenue %>%
 
 ## `purrr` (quickly)
 
-TODO: I think we remove the `purrr` section - as per discussion.
-
 ```{r}
 revenue %>% 
   filter(GEO != 'Canada') %>% 
@@ -913,7 +907,7 @@ The process is the same for both, but the mindset is different.
 * define a family of models - expressed as an equation - you are trying to estimate the **parameters** of the question
 * generate a fitted model that fills in the parameters
 
-### The goal
+## The goal
 
 You are trying to get the model from the family that best fits the data.
 That doesn't mean it's a "good" or "true" model.
@@ -1276,7 +1270,7 @@ cor.test(mtcars$disp, mtcars$vs)
 Smoking and Exercise
 
 ```{r}
-library(MASS)
+survey <- MASS::survey
 tbl <- table(survey$Smoke, survey$Exer)
 tbl
 ```
@@ -1303,19 +1297,6 @@ Things to try:
 2. Estimate the effect that the seasons have on bike share usage? Day of the week?
 3. Build a model that predicts bike share usage for a given day. Separate your data into three
 parts.
-
-## Notes
-
-TODO: Add more content here.
-
-* The R formula language -- using concepts from how the Tidyverse handles fields.
-  * `data = .`
-  * describe how to go from equations to R formulas - the `~` is the `=` we would write in an equation.
-	`y ~ x` translates to `y = a_1 + a_2 * x`
-  * `model_matrix` function 
-  * categorical variables -- does that mean we have to deal with factors?
-* statistical testings `t.test` - use the formula language -- come up with examples.
-* modeling using `lm` - also use the formula language
 
 # Additional Resources
 
