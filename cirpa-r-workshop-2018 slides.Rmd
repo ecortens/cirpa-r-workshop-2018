@@ -910,8 +910,8 @@ The process is the same for both, but the mindset is different.
 
 ## Types of Modeling
 
-* define a family of models - expressed as an equation - you are trying to estimate the **parameters** of the question
-* generate a fitted model that fills in the parameters
+>* define a family of models - expressed as an equation - you are trying to estimate the **parameters** of the question
+>* generate a fitted model that fills in the parameters
 
 ### The goal
 
