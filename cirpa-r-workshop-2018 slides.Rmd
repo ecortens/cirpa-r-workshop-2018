@@ -1302,11 +1302,15 @@ options(warn=0)
 
 # Capstone Exercise
 
+## DC Bike Share Data
+
 The DC BikeShare Dataset has the number of bike share rides on each particularly day or time.
 There are two datasets: one with the total number of rides per day and one with the number
 of rides per hour.
 
 Also included with the data is the weather.
+
+Available here: https://archive.ics.uci.edu/ml/datasets/Bike+Sharing+Dataset
 
 ## Try these
 
