@@ -1256,7 +1256,6 @@ t.test(disp ~ vs, data = mtcars)
 ## Baysean Alternative
 
 ```{r}
-# Comment this out if this doesn't run
 library(BEST)
 y1 <- mtcars[mtcars$vs==0,3]
 y2 <- mtcars[mtcars$vs==1,3]
