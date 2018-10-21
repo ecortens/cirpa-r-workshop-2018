@@ -164,7 +164,8 @@ One of the strengths of R: every step of this workflow can be done using it!
 1. Visualisation
 2. Transformation
 3. Importing and 'wrangling'
-4. Hands-on portion using what we've learned
+4. Modeling
+5. Hands-on portion using what we've learned
 
 # Visualisation
 
@@ -216,7 +217,7 @@ ggplot(data = mpg) +
   geom_point(mapping = aes(x = class, y = drv))
 ```
 
-What's going on here? Is this useful? How might we make it more useful?
+What's going on here? How might we make it more useful?
 
 ## Additional aesthetics
 What about those outliers? Use the `color` aesthetic.
@@ -243,10 +244,10 @@ ggplot(data = mpg) +
 ```
 
 ## Exercises
->* `mpg` variable types: which are categorical, which are continuous?
->* `?mpg`
->* Map a continuous variable to colour, size, and shape: how are these aesthetics different for categorical vs continuous?
->* What happens if you map an aesthetic to something other than a variable name, like `aes(color = displ < 5)`?
+* `mpg` variable types: which are categorical, which are continuous?
+* `?mpg`
+* Map a continuous variable to colour, size, and shape: how are these aesthetics different for categorical vs continuous?
+* What happens if you map an aesthetic to something other than a variable name, like `aes(color = displ < 5)`?
 
 ## Facets: One Variable
 ```{r}
@@ -269,6 +270,10 @@ ggplot(data = mpg) +
 ```
 
 ## Smooth
+```{r, echo = FALSE}
+options(warn=-1)
+```
+
 ```{r}
 ggplot(data = mpg) + 
   geom_smooth(mapping = aes(x = displ, y = hwy))
@@ -320,6 +325,9 @@ ggplot(mpg, aes(x=displ, y=hwy, color=drv)) +
 ```
 
 ## One last visualization
+```{r, echo = FALSE}
+options(warn=0)
+```
 A common scenario:
 ```{r}
 ggplot(data = diamonds) + 
@@ -596,8 +604,7 @@ revenue %>%
   ggplot(aes(Ref_Date, `Total revenues`)) +
   geom_line() +
   labs(title = 'Total University and Degree-Granting College Revenue',
-       x = 'Fiscal Year',
-       y = 'Revenue ($ thousands)') +
+       x = 'Fiscal Year', y = 'Revenue ($ thousands)') +
   scale_y_continuous(labels = scales::comma)
 ```
 
@@ -906,11 +913,8 @@ The process is the same for both, but the mindset is different.
 
 * define a family of models - expressed as an equation - you are trying to estimate the **parameters** of the question
 * generate a fitted model that fills in the parameters
-
-## The goal
-
-You are trying to get the model from the family that best fits the data.
-That doesn't mean it's a "good" or "true" model.
+* You are trying to get the model from the family that best fits the data.
+* That doesn't mean it's a "good" or "true" model.
 
 ## Simulated Data
 
@@ -918,7 +922,7 @@ The `modelr` package has a simulated dataset called `sim1`.
 
 ```{r}
 library(modelr)
-sim1$x
+sim1
 ```
 
 ## Plotting `sim1`
@@ -936,10 +940,11 @@ ggplot(sim1, aes(x, y)) +
 ```
 
 * we can see that there is a pattern from the scatter plot
-* the pattern looks like a straight line - `geom_abline` plots straight line on the graph
+* the pattern looks like a straight line 
 
 ## Using `geom_abline`
 
+`geom_abline` plots a linear equation
 ```{r}
 ggplot(sim1, aes(x, y)) +
   geom_point() +
@@ -955,6 +960,10 @@ ggplot(sim1, aes(x, y)) +
 ```
 
 That's just one model - how can we tell if it's good or not?
+
+## Exercise
+
+1. Try plotting different models on the plot using `geom_abline`. Can you get something that looks like a better model?
 
 ## Evaluating Predictive Models
 
@@ -1023,16 +1032,16 @@ measure_distance <- function(data, mod) {
 measure_distance(sim1, c(12, 0.5))
 ```
 
-## Use this message to choose a model
+## Use this Method to Choose a Model
 
 So, to choose between models -- we can just put in different values.
 ```{r}
 measure_distance(sim1, c(7, 1.5))
 ```
+Use this function to try a few different models.
 
-## Random Models Compared
-
-So, we can generate a lot of models and pick the one with the lowest error.
+## Random Models
+Instead of guessing ourselves, we have the computer generate a lot of models and pick the one with the lowest error.
 
 ```{r}
 models <- tibble(
@@ -1072,16 +1081,13 @@ Lighter colored models are closer.
 ```{r}
 ggplot(sim1, aes(x, y)) +
   geom_point(size = 2, color = "grey30") +
-  geom_abline(
-    aes(intercept = a1, slope = a2, color = -dist),
-    data = filter(models, rank(dist) <= 10)
-  )
+  geom_abline(aes(intercept = a1, slope = a2, color = -dist),
+    data = filter(models, rank(dist) <= 10))
 ```
 
-## Parameter Space
+## Move to Parameter Space
 
-Now, we switch to parameter space...
-We plot every candidate model - showing the distance in color.
+We plot every model, with distance as color.
 We highlight our 10 best models in red.
 
 ```{r}
@@ -1092,7 +1098,10 @@ ggplot(models, aes(a1, a2)) +
 
 ## Zoom In
 
-So, you can zoom in on the area where the best models tend to be. Note the axes and the legend.
+We are interested in the area where all the best random models are.
+It is unlikely that one of our random models is the **best** model.
+So, you can zoom in on the area where the best models tend to be.
+We create a regular grid of model parameters.
 
 ```{r}
 grid <- expand.grid(
@@ -1102,12 +1111,15 @@ grid <- expand.grid(
   mutate(dist = purrr::map2_dbl(a1, a2, sim1_dist))
 ```
 
+## Plot the new best 10 models
+
+Note the axes.
+
 ```{r}
-fine_grid <- expand.grid(
-  a1 = seq(-5, 20, length = 50),
-  a2 = seq(1, 3, length = 50)
-  ) %>%
-  mutate(dist = purrr::map2_dbl(a1, a2, sim1_dist))
+grid %>%
+  ggplot(aes(a1, a2)) +
+  geom_point(data = filter(grid, rank(dist) <= 10), size = 4, colour = "red") +
+  geom_point(aes(colour = -dist))
 ```
 
 ## The new best 10 models
@@ -1120,27 +1132,13 @@ grid %>%
   arrange(dist)
 ```
 
-```{r}
-fine_grid %>%
-  filter(rank(dist) <= 10) %>%
-  arrange(dist)
-```
-
-## Plot the new best 10 models
-
-```{r}
-grid %>%
-  ggplot(aes(a1, a2)) +
-  geom_point(data = filter(grid, rank(dist) <= 10), size = 4, colour = "red") +
-  geom_point(aes(colour = -dist))
-```
-
 ## Contour Map
 
+The contour lines represent equal "bins" of distance.
+
 ```{r}
 grid %>%
-  ggplot(aes(a1, a2, z=-dist)) +
-  geom_contour()
+  ggplot(aes(a1, a2, z=-dist)) + geom_contour()
 ```
 
 ## Contour Map (2)
@@ -1150,17 +1148,7 @@ grid %>%
   ggplot(aes(a1, a2)) +
   geom_point(data = filter(grid, rank(dist) <= 10), size = 4, colour = "red") +
   geom_point(aes(colour = -dist)) + 
-  geom_contour(aes(z = -dist), colour = "green")
-```
-
-## A finer contour map
-
-```{r}
-fine_grid %>%
-  ggplot(aes(a1, a2)) +
-  geom_point(data = filter(fine_grid, rank(dist) <= 10), size = 3, colour = "red") +
-  geom_point(aes(colour = -dist)) + 
-  geom_contour(aes(z = -dist), colour = "orange", bins = 15, size = 1.5)
+  geom_contour(aes(z = -dist), colour = "orange")
 ```
 
 ## Overlay those 10 best models on the data.
@@ -1176,7 +1164,8 @@ ggplot(sim1, aes(x, y)) +
 
 ## Optimize the models
 
-There is a tool to optimize the parameters so you get the smallest distance.
+The `optim` function chooses the parameters that minimize distance.
+The `c(0,0)` is the starting point.
 
 ```{r}
 best <- optim(c(0, 0), measure_distance, data = sim1)
@@ -1253,10 +1242,32 @@ ggplot(sim1, aes(x, resid)) +
   geom_point()
 ```
 
+# Statistical Methods
+
+* Aside from modeling, R has commonly used statistical functions built in.
+* You can automate the generation of these results (check out the `broom` package)
+
 ## _t_-tests
 
 ```{r}
 t.test(disp ~ vs, data = mtcars)
+```
+
+## Baysean Alternative
+
+```{r}
+# Comment this out if this doesn't run
+library(BEST)
+y1 <- mtcars[mtcars$vs==0,3]
+y2 <- mtcars[mtcars$vs==1,3]
+mod1 <- BESTmcmc(y1, y2)
+mod1
+```
+
+## Plotting the Baysean Alternative
+
+```{r}
+plot(mod1)
 ```
 
 ## Correlation
@@ -1267,7 +1278,7 @@ cor.test(mtcars$disp, mtcars$vs)
 
 ## Chi Squared (1)
 
-Smoking and Exercise
+Using survey data on Smoking and Exercise
 
 ```{r}
 survey <- MASS::survey
@@ -1277,8 +1288,16 @@ tbl
 
 ## Chi Squared (2)
 
+```{r, echo = FALSE}
+options(warn=-1)
+```
+
 ```{r}
 chisq.test(tbl)
+```
+
+```{r, echo = FALSE}
+options(warn=0)
 ```
 
 # Capstone Exercise
@@ -1289,7 +1308,7 @@ of rides per hour.
 
 Also included with the data is the weather.
 
-## Thy these
+## Try these
 
 Things to try:
 
@@ -1304,15 +1323,18 @@ parts.
 
 Start here:
 
->* http://r4ds.had.co.nz/
->* http://stat545.com/
+>* R for Data Science [http://r4ds.had.co.nz/](http://r4ds.had.co.nz/)
+>* UBC STAT 545 [http://stat545.com/](http://stat545.com/)
+>* Hands on Programming with R [https://rstudio-education.github.io/hopr/](https://rstudio-education.github.io/hopr/)
+
+## Online Resources
 
 Additional:
 
->* http://adv-r.had.co.nz/
->* http://r-pkgs.had.co.nz/
->* http://swcarpentry.github.io/r-novice-inflammation/
->* https://rstudio-education.github.io/hopr/preface.html
+>* Advanced R [http://adv-r.had.co.nz/](http://adv-r.had.co.nz/)
+>* R Packages [http://r-pkgs.had.co.nz/](http://r-pkgs.had.co.nz/)
+>* Software Carpentry R Lesson [http://swcarpentry.github.io/r-novice-inflammation/](http://swcarpentry.github.io/r-novice-inflammation/)
+>* Data Carpentry R for Social Scientsts [https://datacarpentry.org/r-socialsci/](https://datacarpentry.org/r-socialsci/)
 
 For help/community:
 
@@ -1321,6 +1343,7 @@ For help/community:
 >* https://www.r-project.org/mail.html (Though they're not terribly welcoming to newbies sometimes...)
 
 ## Print Books
+
 >* https://us.sagepub.com/en-us/nam/discovering-statistics-using-r/book236067%20
 >* https://us.sagepub.com/en-us/nam/an-r-companion-to-applied-regression/book233899
 >* http://shop.oreilly.com/product/0636920028574.do
