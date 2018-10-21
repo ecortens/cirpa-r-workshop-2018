@@ -373,8 +373,6 @@ seq(1, 10)
 
 We'll look at CANSIM Tables 0477-0058 and 0477-0059 which cover university revenues and expenditures, respectively.
 
-TODO: Should we change the examples from CANSIM to a built in dataset?
-
 <!---
 1. Search Google for: cansim 477-0058
 2. Follow the first result: "CANSIM - 477-0058 - Financial information of universities and degree ..."
@@ -731,7 +729,7 @@ revenue %>%
 
 ## `purrr` (quickly)
 
-TODO: I think we remove the `purrr` section - as per discussion.
+(There's a lot going on here, just in the slides for your quick reference.)
 
 ```{r}
 revenue %>% 
